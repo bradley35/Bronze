@@ -48,12 +48,14 @@ class Bronze{
     
     init(){
         self.device = MTLCreateSystemDefaultDevice()!
+         #if os(macOS)
         for device in MTLCopyAllDevices(){
             if(!device.isLowPower){
                 self.device = device
                 break
             }
         }
+        #endif
         self.library = device.makeDefaultLibrary()!
         self.queue = device.makeCommandQueue()!
         
@@ -82,11 +84,13 @@ class Bronze{
         
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize) // Generate random matrix in GPU memory
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
             blitEncoder.synchronize(resource: input.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
+        
         cmdBuffer.commit()
         
         
@@ -111,11 +115,13 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
             blitEncoder.synchronize(resource: output)
             blitEncoder.endEncoding()
-        }
+        #endif
+        
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -145,11 +151,13 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
             blitEncoder.synchronize(resource: output.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
+        
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -174,11 +182,12 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
             blitEncoder.synchronize(resource: output.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
+
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -211,11 +220,12 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
             blitEncoder.synchronize(resource: output.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
+        
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -243,11 +253,13 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
             blitEncoder.synchronize(resource: output.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
+        
         cmdBuffer.commit()
         print("Commited")
         //let start = DispatchTime.now()
@@ -285,11 +297,12 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        if(storageMode == .storageModeManaged){
+        
+        #if os(macOS)
             let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
             blitEncoder.synchronize(resource: A.buffer)
             blitEncoder.endEncoding()
-        }
+        #endif
         
         cmdBuffer.commit()
         //print("Commited")
