@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1C1C903C24C626D800F4882C /* random.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1C1C903B24C626D800F4882C /* random.metal */; };
+		1C1C903F24C62D3D00F4882C /* Bronze.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C1C903E24C62D3D00F4882C /* Bronze.swift */; };
 		1C3BC39C24C407C80070E6C4 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C3BC39B24C407C80070E6C4 /* main.swift */; };
+		1C3BC3A424C4C6FC0070E6C4 /* matrix_operations.metal in Sources */ = {isa = PBXBuildFile; fileRef = 1C3BC3A324C4C6FC0070E6C4 /* matrix_operations.metal */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +26,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1C1C903B24C626D800F4882C /* random.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = random.metal; sourceTree = "<group>"; };
+		1C1C903D24C626FD00F4882C /* random.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = random.h; sourceTree = "<group>"; };
+		1C1C903E24C62D3D00F4882C /* Bronze.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Bronze.swift; sourceTree = "<group>"; };
 		1C3BC39824C407C80070E6C4 /* Bronze */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Bronze; sourceTree = BUILT_PRODUCTS_DIR; };
 		1C3BC39B24C407C80070E6C4 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		1C3BC3A324C4C6FC0070E6C4 /* matrix_operations.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = matrix_operations.metal; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +65,10 @@
 			isa = PBXGroup;
 			children = (
 				1C3BC39B24C407C80070E6C4 /* main.swift */,
+				1C1C903E24C62D3D00F4882C /* Bronze.swift */,
+				1C3BC3A324C4C6FC0070E6C4 /* matrix_operations.metal */,
+				1C1C903D24C626FD00F4882C /* random.h */,
+				1C1C903B24C626D800F4882C /* random.metal */,
 			);
 			path = Bronze;
 			sourceTree = "<group>";
@@ -120,7 +131,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1C3BC3A424C4C6FC0070E6C4 /* matrix_operations.metal in Sources */,
+				1C1C903C24C626D800F4882C /* random.metal in Sources */,
 				1C3BC39C24C407C80070E6C4 /* main.swift in Sources */,
+				1C1C903F24C62D3D00F4882C /* Bronze.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,10 +257,13 @@
 		1C3BC3A024C407C80070E6C4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Bronze/Bronze.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UFN89QD7RP;
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -254,10 +271,13 @@
 		1C3BC3A124C407C80070E6C4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Bronze/Bronze.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UFN89QD7RP;
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
