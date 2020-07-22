@@ -377,7 +377,10 @@ extension Bronze{
             set (item){
                 var position = Int(width)*y + x
                 buffer.contents().assumingMemoryBound(to: Float32.self).advanced(by: position)[0] = item
+                
+                #if os(macOS)
                 buffer.didModifyRange(position*MemoryLayout<Float32>.size..<(position+1)*MemoryLayout<Float32>.size)
+                #endif
             }
         }
         
@@ -401,7 +404,10 @@ extension Bronze{
                 current_pointer.copyMemory(from: mat.buffer.contents(), byteCount: Int(width*height*Int32(MemoryLayout<Float32>.size)))
                 current_pointer = current_pointer.advanced(by: Int(width*height*Int32(MemoryLayout<Float32>.size)))
             }
+            
+            #if os(macOS)
             buffer.didModifyRange(0..<buffer.length)
+            #endif
             
             return GPUMatArray(width: width, height: height, buffer: buffer, bronzeParent: mats[0].bronzeParent, count: Int32(mats.count))
         }
