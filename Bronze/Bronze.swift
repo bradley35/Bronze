@@ -13,6 +13,9 @@ import simd
 class Bronze{
     var device:MTLDevice
     var library:MTLLibrary
+    
+    var storageMode:MTLResourceOptions
+    
     fileprivate var id:String
     
     lazy var matAddSimple:MTLComputePipelineState = try! device.makeComputePipelineState(function: library.makeFunction(name: "matAddSimple")!)
@@ -53,11 +56,15 @@ class Bronze{
         }
         self.library = device.makeDefaultLibrary()!
         self.queue = device.makeCommandQueue()!
-    
+        
         self.max_tgs = device.maxThreadsPerThreadgroup
         
         self.id = UUID().uuidString
-        
+        #if os(macOS)
+        storageMode = .storageModeManaged
+        #else
+        storageMode = .storageModeShared
+        #endif
     }
     
     func generateRandomMatrix(width:Int32, height:Int32)->GPUMat{
@@ -75,11 +82,11 @@ class Bronze{
         
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize) // Generate random matrix in GPU memory
         commandEncoder.endEncoding()
-        
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
-        blitEncoder.synchronize(resource: input.buffer)
-        blitEncoder.endEncoding()
-        
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
+            blitEncoder.synchronize(resource: input.buffer)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         
         
@@ -88,9 +95,9 @@ class Bronze{
         return input
     }
     func stringFromMatrix(mat:GPUMat) ->String{
-        let output = device.makeBuffer(length: Int(Int32(MemoryLayout<CChar>.size)*mat.width*mat.height*14), options: .storageModeManaged)!
+        let output = device.makeBuffer(length: Int(Int32(MemoryLayout<CChar>.size)*mat.width*mat.height*14), options: storageMode)!
         var width = mat.width
-        let width_buffer = device.makeBuffer(bytes: &width, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
+        let width_buffer = device.makeBuffer(bytes: &width, length: MemoryLayout<Int32>.size, options: storageMode)!
         
         let cmdBuffer = queue.makeCommandBuffer()!
         let commandEncoder = cmdBuffer.makeComputeCommandEncoder()!
@@ -104,11 +111,11 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
-        blitEncoder.synchronize(resource: output)
-        blitEncoder.endEncoding()
-        
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
+            blitEncoder.synchronize(resource: output)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -138,11 +145,11 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
-        blitEncoder.synchronize(resource: output.buffer)
-        blitEncoder.endEncoding()
-        
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
+            blitEncoder.synchronize(resource: output.buffer)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -156,7 +163,7 @@ class Bronze{
         commandEncoder.setComputePipelineState(matMultScalar)
         
         var scalarRef = scalar
-        let scalarBuffer = device.makeBuffer(bytes: &scalarRef, length: MemoryLayout<Float32>.size, options: .storageModeManaged)
+        let scalarBuffer = device.makeBuffer(bytes: &scalarRef, length: MemoryLayout<Float32>.size, options: storageMode)
         
         commandEncoder.setBuffer(A.buffer, offset: 0, index: 0)
         commandEncoder.setBuffer(scalarBuffer, offset: 0, index: 1)
@@ -167,11 +174,11 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
-        blitEncoder.synchronize(resource: output.buffer)
-        blitEncoder.endEncoding()
-        
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back randomized matrix in CPU memory
+            blitEncoder.synchronize(resource: output.buffer)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -187,8 +194,8 @@ class Bronze{
         var A_width = A.width
         var B_width = B.width
         
-        let A_width_buffer = device.makeBuffer(bytes: &A_width, length: MemoryLayout<Int32>.size, options: .storageModeManaged)
-        let B_width_buffer = device.makeBuffer(bytes: &B_width, length: MemoryLayout<Int32>.size, options: .storageModeManaged)
+        let A_width_buffer = device.makeBuffer(bytes: &A_width, length: MemoryLayout<Int32>.size, options: storageMode)
+        let B_width_buffer = device.makeBuffer(bytes: &B_width, length: MemoryLayout<Int32>.size, options: storageMode)
         
         commandEncoder.setBuffer(A.buffer, offset: 0, index: 0)
         commandEncoder.setBuffer(B.buffer, offset: 0, index: 1)
@@ -204,11 +211,11 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
-        blitEncoder.synchronize(resource: output.buffer)
-        blitEncoder.endEncoding()
-        
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
+            blitEncoder.synchronize(resource: output.buffer)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         cmdBuffer.waitUntilCompleted()
         
@@ -221,11 +228,11 @@ class Bronze{
         let commandEncoder = cmdBuffer.makeComputeCommandEncoder()!
         commandEncoder.setComputePipelineState(matMultMultiRight)
         
-        var Awidth = A.width; let Awidth_buffer = device.makeBuffer(bytes: &Awidth, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
-        var Aheight = A.height; let Aheight_buffer = device.makeBuffer(bytes: &Aheight, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
+        var Awidth = A.width; let Awidth_buffer = device.makeBuffer(bytes: &Awidth, length: MemoryLayout<Int32>.size, options: storageMode)!
+        var Aheight = A.height; let Aheight_buffer = device.makeBuffer(bytes: &Aheight, length: MemoryLayout<Int32>.size, options: storageMode)!
         
-        var Bwidth = B.width; let Bwidth_buffer = device.makeBuffer(bytes: &Bwidth, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
-        var Bheight = B.height; let Bheight_buffer = device.makeBuffer(bytes: &Bheight, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
+        var Bwidth = B.width; let Bwidth_buffer = device.makeBuffer(bytes: &Bwidth, length: MemoryLayout<Int32>.size, options: storageMode)!
+        var Bheight = B.height; let Bheight_buffer = device.makeBuffer(bytes: &Bheight, length: MemoryLayout<Int32>.size, options: storageMode)!
         
         //A,B,Awidth,Aheight,Bwidth,Bheight, out
         
@@ -236,9 +243,11 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
-               blitEncoder.synchronize(resource: output.buffer)
-               blitEncoder.endEncoding()
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
+            blitEncoder.synchronize(resource: output.buffer)
+            blitEncoder.endEncoding()
+        }
         cmdBuffer.commit()
         print("Commited")
         //let start = DispatchTime.now()
@@ -261,11 +270,11 @@ class Bronze{
         }
         
         
-        var Awidth = A.width; let Awidth_buffer = device.makeBuffer(bytes: &Awidth, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
-        var Aheight = A.height; let Aheight_buffer = device.makeBuffer(bytes: &Aheight, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
+        var Awidth = A.width; let Awidth_buffer = device.makeBuffer(bytes: &Awidth, length: MemoryLayout<Int32>.size, options: storageMode)!
+        var Aheight = A.height; let Aheight_buffer = device.makeBuffer(bytes: &Aheight, length: MemoryLayout<Int32>.size, options: storageMode)!
         
-        var Bwidth = B.width; let Bwidth_buffer = device.makeBuffer(bytes: &Bwidth, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
-        var Bheight = B.height; let Bheight_buffer = device.makeBuffer(bytes: &Bheight, length: MemoryLayout<Int32>.size, options: .storageModeManaged)!
+        var Bwidth = B.width; let Bwidth_buffer = device.makeBuffer(bytes: &Bwidth, length: MemoryLayout<Int32>.size, options: storageMode)!
+        var Bheight = B.height; let Bheight_buffer = device.makeBuffer(bytes: &Bheight, length: MemoryLayout<Int32>.size, options: storageMode)!
         
         //A,B,Awidth,Aheight,Bwidth,Bheight, out
         
@@ -276,9 +285,12 @@ class Bronze{
         commandEncoder.dispatchThreads(gridSize, threadsPerThreadgroup: threadGroupSize)
         
         commandEncoder.endEncoding()
-        let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
-               blitEncoder.synchronize(resource: A.buffer)
-               blitEncoder.endEncoding()
+        if(storageMode == .storageModeManaged){
+            let blitEncoder = cmdBuffer.makeBlitCommandEncoder()! // Get back multiplied matrix in CPU memory
+            blitEncoder.synchronize(resource: A.buffer)
+            blitEncoder.endEncoding()
+        }
+        
         cmdBuffer.commit()
         //print("Commited")
         //let start = DispatchTime.now()
@@ -288,7 +300,7 @@ class Bronze{
         
     }
     
-
+    
     func newGPUMat(width:Int32, height:Int32) -> GPUMat{
         return GPUMat.zeros(width: width, height: height, bronzeParent: self)
     }
@@ -316,11 +328,11 @@ extension Bronze{
         
         fileprivate static func zeros(width:Int32, height:Int32, bronzeParent:Bronze) -> GPUMat{
             //print(bronzeParent.device.maxBufferLength)
-            return GPUMat(width: width, height: height, buffer: bronzeParent.device.makeBuffer(length: Int(height)*Int(width)*MemoryLayout<Float>.size, options: .storageModeManaged)!, bronzeParent: bronzeParent)
+            return GPUMat(width: width, height: height, buffer: bronzeParent.device.makeBuffer(length: Int(height)*Int(width)*MemoryLayout<Float>.size, options: bronzeParent.storageMode)!, bronzeParent: bronzeParent)
         }
         fileprivate static func fromSIMD(input: inout simd_float4x4, bronzeParent:Bronze) -> GPUMat{
             
-            let buffer = bronzeParent.device.makeBuffer(bytes: &input, length: 16*MemoryLayout<Float32>.size, options: .storageModeManaged)!
+            let buffer = bronzeParent.device.makeBuffer(bytes: &input, length: 16*MemoryLayout<Float32>.size, options: bronzeParent.storageMode)!
             
             return GPUMat(width: 4, height: 4, buffer: buffer, bronzeParent: bronzeParent)
         }
@@ -368,7 +380,7 @@ extension Bronze{
             let width = mats[0].width
             let height = mats[0].height
             
-            let buffer = mats[0].bronzeParent.device.makeBuffer(length: Int(width*height*Int32(mats.count)*Int32(MemoryLayout<Float32>.size)), options: .storageModeManaged)!
+            let buffer = mats[0].bronzeParent.device.makeBuffer(length: Int(width*height*Int32(mats.count)*Int32(MemoryLayout<Float32>.size)), options: mats[0].bronzeParent.storageMode)!
             
             var current_pointer = buffer.contents()
             
@@ -377,21 +389,21 @@ extension Bronze{
                 current_pointer = current_pointer.advanced(by: Int(width*height*Int32(MemoryLayout<Float32>.size)))
             }
             buffer.didModifyRange(0..<buffer.length)
-    
+            
             return GPUMatArray(width: width, height: height, buffer: buffer, bronzeParent: mats[0].bronzeParent, count: Int32(mats.count))
         }
         
         func copyGPUMat(index:Int)->GPUMat{
-            return GPUMat(width: width, height: height, buffer: bronzeParent.device.makeBuffer(bytes: buffer.contents().advanced(by: Int(width*height*Int32(index)*Int32(MemoryLayout<Float32>.size))), length: Int(width*height*Int32(MemoryLayout<Float32>.size)), options: .storageModeManaged)!, bronzeParent: bronzeParent)
+            return GPUMat(width: width, height: height, buffer: bronzeParent.device.makeBuffer(bytes: buffer.contents().advanced(by: Int(width*height*Int32(index)*Int32(MemoryLayout<Float32>.size))), length: Int(width*height*Int32(MemoryLayout<Float32>.size)), options: bronzeParent.storageMode)!, bronzeParent: bronzeParent)
         }
         fileprivate static func zeros(width:Int32, height:Int32, count:Int32, bronzeParent:Bronze) -> GPUMatArray{
             //print(bronzeParent.device.maxBufferLength)
-            return GPUMatArray(width: width, height: height, buffer: bronzeParent.device.makeBuffer(length: Int(width*height*count*Int32(MemoryLayout<Float32>.size)), options: .storageModeManaged)!, bronzeParent: bronzeParent, count: count)
+            return GPUMatArray(width: width, height: height, buffer: bronzeParent.device.makeBuffer(length: Int(width*height*count*Int32(MemoryLayout<Float32>.size)), options: bronzeParent.storageMode)!, bronzeParent: bronzeParent, count: count)
         }
         
         fileprivate static func fromSIMD(input:[simd_float4x4], bronzeParent:Bronze) -> GPUMatArray{
             let buffer = input.withUnsafeBufferPointer { (pointer) -> MTLBuffer in
-                bronzeParent.device.makeBuffer(bytes: pointer.baseAddress!, length: 16*MemoryLayout<Float32>.size*input.count, options: .storageModeManaged)!
+                bronzeParent.device.makeBuffer(bytes: pointer.baseAddress!, length: 16*MemoryLayout<Float32>.size*input.count, options: bronzeParent.storageMode)!
             }
             
             return GPUMatArray(width: 4, height: 4, buffer: buffer, bronzeParent: bronzeParent, count: Int32(input.count))
